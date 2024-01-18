@@ -353,7 +353,7 @@ func doPublish(ctx *context.Context, manifest *artifact.Artifact, cl client.Clie
 		Name:   cfg.Repository.PullRequest.Base.Name,
 		Owner:  cfg.Repository.PullRequest.Base.Owner,
 		Branch: cfg.Repository.PullRequest.Base.Branch,
-	}, repo, msg, cfg.Repository.PullRequest.Draft)
+	}, repo, msg, cfg.Repository.PullRequest.Draft, cfg.Repository.PullRequest.AutoMerge)
 }
 
 func buildManifestPath(folder, filename string) string {

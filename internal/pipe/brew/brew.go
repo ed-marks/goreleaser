@@ -190,7 +190,7 @@ func doPublish(ctx *context.Context, formula *artifact.Artifact, cl client.Clien
 		Name:   brew.Repository.PullRequest.Base.Name,
 		Owner:  brew.Repository.PullRequest.Base.Owner,
 		Branch: brew.Repository.PullRequest.Base.Branch,
-	}, repo, msg, brew.Repository.PullRequest.Draft)
+	}, repo, msg, brew.Repository.PullRequest.Draft, brew.Repository.PullRequest.AutoMerge)
 }
 
 func doRun(ctx *context.Context, brew config.Homebrew, cl client.ReleaseURLTemplater) error {

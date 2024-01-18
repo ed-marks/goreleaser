@@ -466,7 +466,7 @@ func TestGitHubOpenPullRequestCrossRepo(t *testing.T) {
 		Name:   "something",
 		Branch: "foo",
 	}
-	require.NoError(t, client.OpenPullRequest(ctx, base, head, "some title", false))
+	require.NoError(t, client.OpenPullRequest(ctx, base, head, "some title", false, false))
 }
 
 func TestGitHubOpenPullRequestHappyPath(t *testing.T) {
@@ -514,7 +514,7 @@ func TestGitHubOpenPullRequestHappyPath(t *testing.T) {
 		Branch: "main",
 	}
 
-	require.NoError(t, client.OpenPullRequest(ctx, repo, Repo{}, "some title", false))
+	require.NoError(t, client.OpenPullRequest(ctx, repo, Repo{}, "some title", false, false))
 }
 
 func TestGitHubOpenPullRequestNoBaseBranchDraft(t *testing.T) {
@@ -572,7 +572,7 @@ func TestGitHubOpenPullRequestNoBaseBranchDraft(t *testing.T) {
 
 	require.NoError(t, client.OpenPullRequest(ctx, repo, Repo{
 		Branch: "foo",
-	}, "some title", true))
+	}, "some title", true, false))
 }
 
 func TestGitHubOpenPullRequestPRExists(t *testing.T) {
@@ -616,7 +616,7 @@ func TestGitHubOpenPullRequestPRExists(t *testing.T) {
 		Branch: "main",
 	}
 
-	require.NoError(t, client.OpenPullRequest(ctx, repo, Repo{}, "some title", false))
+	require.NoError(t, client.OpenPullRequest(ctx, repo, Repo{}, "some title", false, false))
 }
 
 func TestGitHubOpenPullRequestBaseEmpty(t *testing.T) {
@@ -665,7 +665,7 @@ func TestGitHubOpenPullRequestBaseEmpty(t *testing.T) {
 		Branch: "foo",
 	}
 
-	require.NoError(t, client.OpenPullRequest(ctx, Repo{}, repo, "some title", false))
+	require.NoError(t, client.OpenPullRequest(ctx, Repo{}, repo, "some title", false, false))
 }
 
 func TestGitHubOpenPullRequestHeadEmpty(t *testing.T) {
@@ -714,7 +714,55 @@ func TestGitHubOpenPullRequestHeadEmpty(t *testing.T) {
 		Branch: "main",
 	}
 
-	require.NoError(t, client.OpenPullRequest(ctx, repo, Repo{}, "some title", false))
+	require.NoError(t, client.OpenPullRequest(ctx, repo, Repo{}, "some title", false, false))
+}
+
+func TestGitHubOpenPullRequestAutoMerge(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+
+		if r.URL.Path == "/repos/someone/something/contents/.github/PULL_REQUEST_TEMPLATE.md" {
+			content := github.RepositoryContent{
+				Encoding: github.String("base64"),
+				Content:  github.String(base64.StdEncoding.EncodeToString([]byte(testPRTemplate))),
+			}
+			bts, _ := json.Marshal(content)
+			_, _ = w.Write(bts)
+			return
+		}
+
+		if r.URL.Path == "/repos/someone/something/pulls" {
+			r, err := os.Open("testdata/github/pull.json")
+			require.NoError(t, err)
+			_, err = io.Copy(w, r)
+			require.NoError(t, err)
+			return
+		}
+
+		if r.URL.Path == "/rate_limit" {
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprint(w, `{"resources":{"core":{"remaining":120}}}`)
+			return
+		}
+
+		t.Error("unhandled request: " + r.URL.Path)
+	}))
+	defer srv.Close()
+
+	ctx := testctx.NewWithCfg(config.Project{
+		GitHubURLs: config.GitHubURLs{
+			API: srv.URL + "/",
+		},
+	})
+	client, err := newGitHub(ctx, "test-token")
+	require.NoError(t, err)
+	repo := Repo{
+		Owner:  "someone",
+		Name:   "something",
+		Branch: "main",
+	}
+
+	require.NoError(t, client.OpenPullRequest(ctx, repo, Repo{}, "some title", false, true))
 }
 
 func TestGitHubCreateFileHappyPathCreate(t *testing.T) {

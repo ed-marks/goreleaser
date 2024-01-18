@@ -195,7 +195,7 @@ func (c *githubClient) OpenPullRequest(
 	ctx *context.Context,
 	base, head Repo,
 	title string,
-	draft bool,
+	draft, automerge bool,
 ) error {
 	c.checkRateLimit(ctx)
 	base.Owner = ordered.First(base.Owner, head.Owner)
@@ -239,6 +239,18 @@ func (c *githubClient) OpenPullRequest(
 		return fmt.Errorf("could not create pull request: %w", err)
 	}
 	log.WithField("url", pr.GetHTMLURL()).Info("pull request created")
+	if automerge {
+		pr.AutoMerge = &github.PullRequestAutoMerge{}
+		pr, res, err = c.client.PullRequests.Edit(ctx, base.Owner, base.Name, *pr.Number, pr)
+		if err != nil {
+			if res.StatusCode == http.StatusUnprocessableEntity {
+				log.WithError(err).Warn("auto merge not enabled on pull request")
+				return nil
+			}
+			return fmt.Errorf("auto merge not enabled on pull request: %w", err)
+		}
+		log.WithField("url", pr.GetHTMLURL()).Info("auto merge enabled on pull request")
+	}
 	return nil
 }
 

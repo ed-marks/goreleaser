@@ -277,7 +277,7 @@ func doPublish(ctx *context.Context, manifest *artifact.Artifact, cl client.Clie
 		Name:   scoop.Repository.PullRequest.Base.Name,
 		Owner:  scoop.Repository.PullRequest.Base.Owner,
 		Branch: scoop.Repository.PullRequest.Base.Branch,
-	}, repo, commitMessage, scoop.Repository.PullRequest.Draft)
+	}, repo, commitMessage, scoop.Repository.PullRequest.Draft, scoop.Repository.PullRequest.AutoMerge)
 }
 
 // Manifest represents a scoop.sh App Manifest.

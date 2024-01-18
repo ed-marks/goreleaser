@@ -407,7 +407,7 @@ func doPublish(ctx *context.Context, cl client.Client, wingets []*artifact.Artif
 		Name:   winget.Repository.PullRequest.Base.Name,
 		Owner:  winget.Repository.PullRequest.Base.Owner,
 		Branch: winget.Repository.PullRequest.Base.Branch,
-	}, repo, msg, winget.Repository.PullRequest.Draft)
+	}, repo, msg, winget.Repository.PullRequest.Draft, winget.Repository.PullRequest.AutoMerge)
 }
 
 func langserverLineFor(tp artifact.Type) string {

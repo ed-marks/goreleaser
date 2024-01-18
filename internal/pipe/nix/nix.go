@@ -402,7 +402,7 @@ func doPublish(ctx *context.Context, prefetcher shaPrefetcher, cl client.Client,
 		Name:   nix.Repository.PullRequest.Base.Name,
 		Owner:  nix.Repository.PullRequest.Base.Owner,
 		Branch: nix.Repository.PullRequest.Base.Branch,
-	}, repo, msg, nix.Repository.PullRequest.Draft)
+	}, repo, msg, nix.Repository.PullRequest.Draft, nix.Repository.PullRequest.AutoMerge)
 }
 
 func doBuildPkg(ctx *context.Context, data templateData) (string, error) {
